@@ -1,88 +1,89 @@
 var lights = [
-    endpoints["bathroom_main_light_sw"],
-    endpoints["bathroom_hall_light_sw"]
+    vdevs["lights"]["bath_main"],
+    vdevs["lights"]["bath_hall"]
 ];
 
-defineRule("RestartCoolingCycleMorning", {
+defineRule("RestartFanCycleMorning", {
     when: cron("0 1 * * *"),
     then: function() {
-        startTimer("cooler_rest", 30000);
+        startTimer("fan_rest", 30000);
+        log("[Fan] Cron restarted...");
     }
 });
 
-defineRule("CoolerEnableOnBathroomLight", {
+defineRule("FanEnableOnBathLight", {
     asSoonAs: function () {
-        return customlib.any_true(lights);
+        return customlib.any_on(lights);
     },
     then: function ()  {
-        log("[Cooler] Lights on!");
-        timers.cooler_bathroom.stop()
-        endpoints["home_cooler_sw"].set(true);
+        log("[Fan] Lights on!");
+        timers.fan_bath.stop()
+        vdevs["switches"]["fan"].enable();
     }
   });
 
-defineRule("CoolerDisableOnBathroomLightOff", {
+defineRule("FanDisableOnBathLightOff", {
     asSoonAs: function () {
-        return customlib.all_false(lights);
+        return customlib.all_off(lights);
     },
     then: function ()  {
-        log("[Cooler] Lights off!");
-        startTimer("cooler_bathroom", customlib.as_ms(storage.values["cooler_bathroom"]));
+        log("[Fan] Lights off!");
+        startTimer("fan_bath", customlib.as_ms(storage.values["fan_bath"]));
     }
   });
 
-defineRule("TimerFixOnCoolerEnable", {
+defineRule("TimerFixOnFanEnable", {
     asSoonAs: function () {
-        return endpoints["home_cooler_sw"].enabled();
+        return vdevs["switches"]["fan"].state;
     },
     then: function ()  {
-        timers.cooler_rest.stop()
+        timers.fan_rest.stop()
     }
   });
 
-defineRule("CoolerActiveTimerEnd", {
+defineRule("FanActiveTimerEnd", {
     asSoonAs: function () {
-        return timers.cooler_active.firing;
+        return timers.fan_active.firing;
     },
     then: function ()  {
-        log("[Cooler] Active timer stop!");
-        if (timers.cooler_bathroom.firing || customlib.any_true(lights)) {
+        log("[Fan] Active timer stop!");
+        if (timers.fan_bath.firing || customlib.any_on(lights)) {
             return;
         }
-        log("[Cooler] Disabling cooler...");
-        startTimer("cooler_rest", customlib.as_ms(storage.values["cooler_rest"]));
-        endpoints["home_cooler_sw"].set(false);
+        log("[Fan] Disabling fan...");
+        startTimer("fan_rest", customlib.as_ms(storage.values["fan_rest"]));
+        vdevs["switches"]["fan"].disable();
     }
   });
 
-defineRule("CoolerRestTimerEnd", {
+defineRule("FanRestTimerEnd", {
     asSoonAs: function () {
-        return timers.cooler_rest.firing;
+        return timers.fan_rest.firing;
     },
     then: function ()  {
         var date = Date();
-        if (date.getHours() > storage.values.cooler_block_start 
-        || date.getHours() < storage.values.cooler_block_end)
+        if (date.getHours() > storage.values.fan_block_start 
+        || date.getHours() < storage.values.fan_block_end)
         {
             return;
         }
-        log("[Cooler] Rest timer stop! Enabling cooler...");
-        startTimer("cooler_active", customlib.as_ms(storage.values["cooler_active"]));
-        endpoints["home_cooler_sw"].set(true);
+        log("[Fan] Rest timer stop! Enabling fan...");
+        startTimer("fan_active", customlib.as_ms(storage.values["fan_active"]));
+        vdevs["switches"]["fan"].enable();
     }
   });
 
-defineRule("CoolerBathroomTimerEnd", {
+defineRule("FanBathTimerEnd", {
     asSoonAs: function () {
-        return timers.cooler_bathroom.firing;
+        return timers.fan_bath.firing;
     },
     then: function ()  {
-        log("[Cooler] Bathroom timer stop!");
-        if (timers.cooler_active.firing) {
+        log("[Fan] Bath timer stop!");
+        if (timers.fan_active.firing) {
             return;
         }
-        log("[Cooler] Disabling cooler...");
-        startTimer("cooler_rest", customlib.as_ms(storage.values["cooler_rest"]));
-        endpoints["home_cooler_sw"].set(false);
+        log("[Fan] Disabling fan...");
+        startTimer("fan_rest", customlib.as_ms(storage.values["fan_rest"]));
+        vdevs["switches"]["fan"].disable();
     }
   });
