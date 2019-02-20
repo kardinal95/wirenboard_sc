@@ -4,7 +4,7 @@ var lights = [
 ];
 
 defineRule("RestartFanCycleMorning", {
-    when: cron("0 1 * * *"),
+    when: cron("0 6 * * *"),
     then: function() {
         startTimer("fan_rest", 30000);
         log("[Fan] Cron restarted...");
@@ -62,8 +62,8 @@ defineRule("FanRestTimerEnd", {
     },
     then: function ()  {
         var date = Date();
-        if (date.getHours() > storage.values.fan_block_start 
-        || date.getHours() < storage.values.fan_block_end)
+        if (date.getHours() > storage.values["fan_block_start"] 
+        || date.getHours() < storage.values["fan_block_end"])
         {
             return;
         }
