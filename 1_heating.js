@@ -6,15 +6,20 @@ var detectors = [
 var modeHWS = true;
 
 function switchHWS(state) {
+    log("[HEAT] Trying to switch mode to " + state);
     if (modeHWS == state) {
+        log("[HEAT] Already in required mode. Quitting...");
         return;
     }
     modeHWS = state;
+    log("[HEAT] Mode switched!");
     vdevs["switches"]["Valve_HWS"].disable();
     vdevs["switches"]["Valve_Heating"].disable();
     if (state == true) {
+        log("[HEAT] Enabling HWS Valve");
         vdevs["switches"]["Valve_HWS"].enable();
     } else {
+        log("[HEAT] Enabling Heating Valve");
         vdevs["switches"]["Valve_Heating"].enable();
     }
 }
@@ -42,7 +47,7 @@ defineRule("HWSControlOnTemp", {
     },
     then: function(newValue, devName, cellName) {
         if (vdevs["detectors"]["T3"].failed) {
-            // Do something here...
+            log("[HEAT] Incorrect values on T3!");
             return;
         }
         if (newValue < storage.values["hws_target"] - storage.values["hws_hyst"]) {

@@ -41,16 +41,17 @@ function TimedOnSwitch(target, timeout) {
     this.disable = function() {
         this.state = false;
         if (this.timer != null) {
+            log("[DEV] Clearing timer on timed switch...");
             clearTimeout(this.timer);
+            this.timer = null;
         }
     }
     this.enable = function() {
-        // Repeating to avoid multiple timers
-        if (this.state == true) {
-            return;
-        }
         this.state = true;
-        this.timer = setTimeout(this.disable, timeout * 1000);
+        if (this.timer == null) {
+            log("[DEV] Setting timer on timed switch...");
+            this.timer = setTimeout(this.disable.bind(this), timeout * 1000);
+        }
     }
 }
 
