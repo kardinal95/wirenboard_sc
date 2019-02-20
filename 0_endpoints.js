@@ -40,7 +40,9 @@ function TimedOnSwitch(target, timeout) {
     });
     this.disable = function() {
         this.state = false;
-        clearTimeout(this.timer);
+        if (this.timer != null) {
+            clearTimeout(this.timer);
+        }
     }
     this.enable = function() {
         // Repeating to avoid multiple timers
