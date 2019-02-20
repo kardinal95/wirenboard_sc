@@ -61,7 +61,7 @@ defineRule("FanRestTimerEnd", {
         return timers.fan_rest.firing;
     },
     then: function ()  {
-        var date = Date();
+        var date = new Date();
         if (date.getHours() > storage.values["fan_block_start"] 
         || date.getHours() < storage.values["fan_block_end"])
         {
