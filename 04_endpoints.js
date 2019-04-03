@@ -50,7 +50,7 @@ function TimedOnSwitch(target, timeout) {
   // Переопределяем стандартное включение
   var defEnable = this.enable;
   this.enable = function (tout) {
-    // Выбираем по наличию: стандартное (общее) время, либо стандартное
+    // Выбираем по наличию: стандартное (общее) время
     // Либо переданное в функцию
     if (tout == undefined || tout == null) {
       if (this._timeout == undefined || this._timeout == null) {
@@ -152,12 +152,61 @@ var heatValve = {
     // Включаем нужный
     if (this.mode == 'hws') {
       log.info('[DEV] HeatingValve - Switching to HWS...')
+      // TODO Make a separate type for this
+      dev["wb-dac/MOD1_O1"] = constants.temp.HWS_TARGET * 100 + 2000;
       this.hwsSw.enable();
+      vdevs.complex.testReg.disable();
     } else if (this.mode == 'heat') {
       log.info('[DEV] HeatingValve - Switching to heating...')
+      // TODO Make a separate type for this
+      dev["wb-dac/MOD1_O1"] = constants.system.LOW_DAC_V;
       this.heatSw.enable();
+      vdevs.complex.testReg.enable();
     } else {
       log.error('[DEV] HeatingValve - Incorrect mode');
+    }
+  }
+}
+
+var testTempReg = {
+  //K, уставка, тау, мин.длит.импульса
+  reg: new customLib.complex.SimpleRegulator(constants.system.TP_REG_K,
+    constants.temp.TP_TARGET,
+    constants.system.TP_REG_TAU,
+    constants.system.TP_REG_BORDER_MS),
+  // ТП больше
+  tpMore: new TimedOnSwitch("wb-gpio/EXT6_R3A3", 0),
+  // ТП меньше
+  tpLess: new TimedOnSwitch("wb-gpio/EXT6_R3A4", 0),
+  enabled: null,
+  run: function() {
+    // TODO Change on working to sensor
+    temp = dev['wb-w1/28-02099177d5e8'];
+    out = this.reg.calculate(temp);
+    // TODO Delete on working
+    log.info('[TR] ' + 'Curr: ' + temp + ', Out: ' + out + 'ms, Lo: ' + this.reg.leftover + 'ms');
+    if (out == 0) {
+      return;
+    } else {
+      this.tpLess.disable();
+      this.tpMore.disable();
+    }
+    if (out < 0) {
+      this.tpLess.enable(Math.abs(out) / 1000);
+    }
+    if (out > 0) {
+      this.tpMore.enable(out / 1000);
+    }
+  },
+  enable: function() {
+    if (this.enabled == null) {
+      this.enabled = setInterval(this.run.bind(this), 6*1000);
+    }
+  },
+  disable: function() {
+    if (this.enabled != null) {
+      clearInterval(this.enabled);
+      this.enabled = null;
     }
   }
 }
@@ -175,7 +224,7 @@ var vdevs = {
     // Вентиляция
     vent: new OnOffSwitch("wb-gpio/EXT5_R3A5"),
     // Главный газовый клапан
-    ggk: new OnOffSwitch("wb-gpio/EXT5_R3A6"),
+    ggk: new OnOffSwitch("wb-gpio/EXT5_R3A6")
   },
   sensors: {
     // Датчик СН4
@@ -188,7 +237,8 @@ var vdevs = {
   // Сложные устройства
   complex: {
     // Вентиль отопления
-    heatValve: heatValve
+    heatValve: heatValve,
+    testReg: testTempReg
   }
 };
 

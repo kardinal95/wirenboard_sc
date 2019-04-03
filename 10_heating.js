@@ -27,6 +27,7 @@ defineRule("ValveControlOnHws", {
   then: function (newValue, devName, cellName) {
     if (!vdevs.sensors.t3.trusted) {
       log.error("[HEAT] Incorrect values on T3!");
+      vdevs.complex.heatValve.switchMode('heat');
       return;
     }
     if (newValue < constants.temp.HWS_TARGET - constants.temp.HWS_LOW_HYST) {

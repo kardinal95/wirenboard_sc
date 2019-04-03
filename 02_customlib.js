@@ -14,7 +14,9 @@ var customLib = {
   // Перевод минут в мс
   asMs: function (minutes) {
     return minutes * 60 * 1000;
-  }
+  },
+
+  complex: {}
 };
 
 // Работает только с классом OnOffSwitch

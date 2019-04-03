@@ -2,9 +2,11 @@ var constants = {
   // Температуры (градусы цельсия)
   temp: {
     // Температура поддерживаемая для ГВС
-    HWS_TARGET: 45,
+    HWS_TARGET: 55,
     // Гистерезис ГВС (нижний)
-    HWS_LOW_HYST: 4
+    HWS_LOW_HYST: 4,
+    // Температура уставки для ТП
+    TP_TARGET: 38
   },
   // Временные интервалы (минуты)
   timers: {
@@ -25,8 +27,16 @@ var constants = {
   // Системные переменные
   system: {
     // Стандартное время включения переключателя с таймером
-    DEFAULT_TIMED_SWITCH_ON: 10
-  }
+    DEFAULT_TIMED_SWITCH_ON: 10,
+    // Нижний DAC
+    LOW_DAC_V: 5500,
+    // Коэфф K для регулятора ТП
+    TP_REG_K: 8,
+    // Коэфф Tau для регулятора ТП
+    TP_REG_TAU: 1,
+    // Граница изменения для регулятора ТП (мс)
+    TP_REG_BORDER_MS: 300
+  },
 };
 
 global.constants = constants;
